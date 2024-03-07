@@ -1,1 +1,1 @@
-# speedrun-stats-tracker
+# Speedrun Stats Tracker
