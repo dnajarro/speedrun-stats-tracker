@@ -1,0 +1,126 @@
+version: '3'
+
+services:
+  source_postgres:
+    image: postgres:15
+    ports:
+      - "5433:5432"
+    networks:
+      - speedrun_stats_network
+    environment:
+      POSTGRES_DB: source_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - ./source_db_init/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  destination_postgres:
+    image: postgres:15
+    ports:
+      - "5434:5432"
+    networks:
+      - speedrun_stats_network
+    environment:
+      POSTGRES_DB: destination_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    # add volume to persist the destination db that I then can use to move to the web application
+    # volumes:
+    #   - ./source_db_init/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  etl_script:
+    build:
+      context: ./etl
+      dockerfile: Dockerfile
+    command: ["python", "etl_script.py"]
+    networks:
+      - speedrun_stats_network
+    depends_on:
+      - source_postgres
+      - destination_postgres
+
+  # postgres:
+  #   image: postgres:latest
+  #   networks:
+  #     - speedrun_stats_network
+  #   environment:
+  #     - POSTGRES_USER=airflow
+  #     - POSTGRES_PASSWORD=airflow
+  #     - POSTGRES_DB=airflow
+
+  # init-airflow:
+  #   image: apache/airflow:latest
+  #   depends_on:
+  #     -postgres
+  #   networks:
+  #     - speedrun_stats_network
+  #   environment:
+  #     - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgres+psycopg2://airflow:airflow@postgres/airflow
+  #   command: >
+  #     bash -c "airflow db init &&
+  #             airflow users create --username airflow --password password --firstname John --lastname Doe --role Admin --email admin@example.org"
+  
+  # webserver:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   user: root
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - speedrun_stats_network
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+  #   volumes:
+  #     - ./airflow/dags:/opt/airflow/dags
+  #     - ./etl:/opt/airflow/etl
+  #     - ./custom_postgres:/opt/dbt
+  #     - ~/.dbt:/root/.dbt
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   environment:
+  #     - LOAD_EX=n
+  #     - EXECUTOR=Local
+  #     - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgres+psycopg2://airflow:airflow@postgres/airflow
+  #     - AIRFLOW__CORE__FERNET_KEY=
+  #     - AIRFLOW__WEBSERVER__DEFAULT__USER_USERNAME=airflow
+  #     - AIRFLOW__WEBSERVER__DEFAULT__USER_PASSWORD=password
+  #     - AIRFLOW_WWW_USER_USERNAME=airflow
+  #     - AIRFLOW_WWW_USER_PASSWORD=password
+  #     - AIRFLOW__WEBSERVER__SECRET_KEY=secret
+  #   ports:
+  #     - "8080:8080"
+  #   commands: webserver
+
+  # scheduler:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   user: root
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - speedrun_stats_network
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+  #   volumes:
+  #     - ./airflow/dags:/opt/airflow/dags
+  #     - ./etl:/opt/airflow/etl
+  #     - ./custom_postgres:/opt/dbt
+  #     - ~/.dbt:/root/.dbt
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   environment:
+  #     - LOAD_EX=n
+  #     - EXECUTOR=Local
+  #     - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgres+psycopg2://airflow:airflow@postgres/airflow
+  #     - AIRFLOW__CORE__FERNET_KEY=
+  #     - AIRFLOW__WEBSERVER__DEFAULT__USER_USERNAME=airflow
+  #     - AIRFLOW__WEBSERVER__DEFAULT__USER_PASSWORD=password
+  #     - AIRFLOW_WWW_USER_USERNAME=airflow
+  #     - AIRFLOW_WWW_USER_PASSWORD=password
+  #     - AIRFLOW__WEBSERVER__SECRET_KEY=secret
+  #   ports:
+  #     - "8080:8080"
+  #   commands: scheduler
+networks:
+  speedrun_stats_network:
+    driver: bridge
