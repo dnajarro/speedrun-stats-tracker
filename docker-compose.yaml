@@ -1,32 +1,32 @@
 version: '3'
 
 services:
-  source_postgres:
+  speedrun_postgres:
     image: postgres:15
     ports:
       - "5433:5432"
     networks:
       - speedrun_stats_network
     environment:
-      POSTGRES_DB: source_db
+      POSTGRES_DB: speedrun_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
     volumes:
       - ./source_db_init/init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  destination_postgres:
-    image: postgres:15
-    ports:
-      - "5434:5432"
-    networks:
-      - speedrun_stats_network
-    environment:
-      POSTGRES_DB: destination_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
-    # add volume to persist the destination db that I then can use to move to the web application
-    # volumes:
-    #   - ./source_db_init/init.sql:/docker-entrypoint-initdb.d/init.sql
+  # destination_postgres:
+  #   image: postgres:15
+  #   ports:
+  #     - "5434:5432"
+  #   networks:
+  #     - speedrun_stats_network
+  #   environment:
+  #     POSTGRES_DB: destination_db
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: secret
+  #   # add volume to persist the destination db that I then can use to move to the web application
+  #   # volumes:
+  #   #   - ./source_db_init/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   etl_script:
     build:
@@ -36,8 +36,7 @@ services:
     networks:
       - speedrun_stats_network
     depends_on:
-      - source_postgres
-      - destination_postgres
+      - speedrun_postgres
 
   # postgres:
   #   image: postgres:latest

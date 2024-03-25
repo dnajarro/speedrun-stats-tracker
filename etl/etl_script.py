@@ -2,9 +2,11 @@ import subprocess
 import time
 import requests
 import datetime
+import sqlalchemy
+import pandas as pd
+from sqlalchemy.orm import sessionmaker
 
 # ER = Elden Ring
-# SRT = Spyro Reignited Trilogy
 # SMO = Super Mario Odyssey
 # LOP = Lies of P
 
@@ -26,17 +28,103 @@ def get_all_submitted_runs(game_id):
     max = 200
     offset_increment = 200
     offset = 0
+    max_offset = 10000
     runs = []
-    while len_data != 0:
+    # request the data from newest to oldest
+    while len_data != 0 and offset + max < max_offset:
         r = requests.get(
-            f"https://www.speedrun.com/api/v1/runs?max={max}&offset={offset}&game={game_id}")
+            f"https://www.speedrun.com/api/v1/runs?max={max}&offset={offset}&game={game_id}&orderby=submitted&direction=desc&embed=players")
         data = r.json()
         len_data = len(data['data'])
         offset += offset_increment
         runs.extend(data['data'])
         # Sleep to not exceed 100 requests/min
-        time.sleep(0.02)
+        time.sleep(0.05)
+    # request the data from oldest runs to newest, specifically for games with lots of runs, like SMO
+    if offset + max >= max_offset:
+        offset = 0
+        while len_data != 0 and offset_increment + max < max_offset:
+            r = requests.get(
+                f"https://www.speedrun.com/api/v1/runs?max={max}&offset={offset}&game={game_id}&orderby=submitted&direction=asc&embed=players")
+            data = r.json()
+            len_data = len(data['data'])
+            offset += offset_increment
+            runs.extend(data['data'])
+            # Sleep to not exceed 100 requests/min
+            time.sleep(0.05)
     return runs
+
+
+# Takes in a list of run data and isolates player data into a list of dictionaries containing
+# game_id, player_id1, player_name1, player_id2, player_name2 for all players based on run. Returns list of dictionaries.
+def get_all_player_data(run_data):
+    player_data = []
+    for run in run_data:
+        player_id2 = None
+        player_name2 = None
+        if len(run['players']['data']) > 1:
+            player_id2 = run['players']['data'][1]['id']
+            player_name2 = run['players']['data'][1]['names']['international']
+        player = {
+            "game_id": run['game'],
+            "player_id1": run['players']['data'][0]['id'],
+            "player_name1": run['players']['data'][0]['names']['international'],
+            "player_id2": player_id2,
+            "player_name2": player_name2
+        }
+        player_data.append(player)
+    return player_data
+
+
+# Calls API to get all speedrun categories associated with a given game. Takes game_id and game_name arguments and returns a list of dictionaries representing each category
+# containing game_id, category_id, and category_name.
+def get_all_run_categories(game_id, game_name):
+    r = requests.get(
+        f"https://www.speedrun.com/api/v1/games/{game_id}/categories"
+    )
+    data = r.json()
+    categories = []
+    for category in data['data']:
+        category_info = {"game_id": game_id,
+                         "game_name": game_name,
+                         "category_id": category['id'],
+                         "category_name": category['name']}
+        categories.append(category_info)
+    return categories
+
+
+# Combines category data, player data, and run data to create dictionary. Dictionary is intended to be converted into a pandas dataframe to easily load into database
+def combine_id_data(id_dict, all_runs, category_data, player_data):
+    ids = []
+    types = []
+    label_names = []
+    for category in category_data:
+        game_id = category['game_id']
+        game_name = category['game_name']
+        if game_id not in ids:
+            ids.append(game_id)
+            types.append('Game')
+            label_names.append(game_name)
+        category_id = category['category_id']
+        category_name = category['category_name']
+        if category_id not in ids:
+            ids.append(category_id)
+            types.append('Category')
+            label_names.append(category)
+    for player in player_data:
+        player_id1 = player['player_id1']
+        player_name1 = player['player_name1']
+        if player_id1 not in ids:
+            ids.append(player_id1)
+            types.append('Player')
+            label_names.append(player_name1)
+        if player['player_id2'] is not None:
+            player_id2 = player['player_id2']
+            player_name2 = player['player_name2']
+            if player_id2 not in ids:
+                ids.append(player_id2)
+                types.append('Player')
+                label_names.append(player_name2)
 
 
 # Calls API to get top 10 verified times for a given category of runs for a given game. Includes player info in embed for better player identification. Returns JSON response.
@@ -119,12 +207,14 @@ print("Extracting game data...")
 
 # Elden Ring API calls
 er_id = "nd28z0ed"
+elden_ring_name = "Elden Ring"
 er_anyperc_id = "02qr00pk"
 er_anyperc_glitchless_id = "w20e4yvd"
 er_remembrances_glitchless_id = "9d8nl33d"
 
 # SMO API calls
 smo_id = "76r55vd8"
+smo_name = "Super Mario Odyssey"
 smo_anyperc_id = "w20w1lzd"
 smo_100perc_id = "n2y5jwek"
 
@@ -132,13 +222,31 @@ smo_100perc_id = "n2y5jwek"
 
 # Spyro API calls
 spyro_id = "576rje18"
+spyro_name = "Spyro The Dragon"
 spyro_anyperc_id = "lvdo8ykp"
 spyro_120perc_id = "7wkp1gkr"
 
 # Lies of P API calls
 lop_id = "4d7n7wl6"
+lop_name = "Lies of P"
 lop_anyperc_id = "mke1p392"
 lop_allergobosses_id = "xk9z63x2"
+
+# Extracting id data
+
+er_categories = get_all_run_categories(er_id)
+smo_categories = get_all_run_categories(smo_id)
+spyro_categories = get_all_run_categories(spyro_id)
+lop_categories = get_all_run_categories(lop_id)
+er_all_runs = get_all_submitted_runs(er_id)
+er_all_players = get_all_player_data(er_all_runs)
+smo_all_runs = get_all_submitted_runs(smo_id)
+smo_all_players = get_all_player_data(smo_all_runs)
+spyro_all_runs = get_all_submitted_runs(spyro_id)
+spyro_all_players = get_all_player_data(spyro_all_runs)
+lop_all_runs = get_all_submitted_runs(lop_id)
+lop_all_players = get_all_player_data(lop_all_runs)
+
 
 # Extracting Elden Ring data
 
@@ -268,7 +376,7 @@ lop_anyperc_top10_run_times = get_run_times_from_top10(lop_anyperc_top10_data)
 # Run times for top 10 runs for LoP All Ergo Bosses
 lop_allergobosses_top10_run_times = get_run_times_from_top10(
     lop_allergobosses_top10_data)
-print("Total LoP runs submitted:", len(lop_all_runs))
+print("Total LoP runs submitted:", lop_all_runs, len(lop_all_runs))
 print("No. of LoP runs verified since last week:", len(lop_newest_verified_runs))
 print("LoP Any% Top 10 player data:", lop_anyperc_players_data)
 print("LoP All Ergo Bosses Top 10 player data:", lop_allergobosses_players_data)
@@ -276,54 +384,105 @@ print("LoP Any% Top 10 run times:", lop_anyperc_top10_run_times)
 print("LoP All Ergo Bosses Top 10 run times:",
       lop_allergobosses_top10_run_times)
 
-print("Completed Game Search....")
+print("Completed Extraction and Transformation....")
 
-# define configuration parameters for connecting to source database
-source_config = {
-    'dbname': 'source_db',
-    'user': 'postgres',
-    'password': 'secret',
-    # use the service name from docker-compose.yaml as hostname
-    'host': 'source_postgres'
-}
+# Top Ten columns
+top_ten_run_id = []
+top_ten_player_id1 = []
+top_ten_player_id2 = []
+top_ten_game_name = []
+top_ten_placement = []
+top_ten_player_name1 = []
+top_ten_player_name2 = []
+top_ten_category = []
+top_ten_runtime = []
+top_ten_verification_date = []
+top_ten_retrieval_date = []
 
-# define configuration parameters for connecting to destination database
-destination_config = {
-    'dbname': 'destination_db',
-    'user': 'postgres',
-    'password': 'secret',
-    # use the service name from docker-compose.yaml as hostname
-    'host': 'destination_postgres'
-}
+# All Runs columns
+all_runs_run_id = []
+all_runs_player_id1 = []
+all_runs_player_id2 = []
+all_runs_game_name = []
+all_runs_player_name1 = []
+all_runs_player_name2 = []
+all_runs_category = []
+all_runs_runtime = []
+all_runs_retrieval_date = []
 
-# uses pg_dump command to dump the data from source database to SQL file
-dump_command = [
-    'pg_dump',
-    '-h', source_config['host'],
-    '-U', source_config['user'],
-    '-d', source_config['dbname'],
-    '-f', 'data_dump.sql',
-    # avoid being prompted for password every time
-    '-w'
-]
+# Ids columns
+id = []
+type = []
+label_name = []
+
+for run in er_all_runs:
+    all_runs_run_id.append(run['id'])
+    all_runs_player_id1.append(run['players']['data'][0]['id'])
+    if len(run['players']) > 1:
+        all_runs_player_id2.append(run['players']['data'][1]['id'])
+    all_runs_game_name.append('Elden Ring')
+    all_runs_category.append(run['category'])
+    all_runs_runtime.append(run['times']['primary_t'])
+    all_runs_retrieval_date.append(datetime.datetime.now())
+    id.append(run['game'])
+    type.append('game')
+    label_name.append('Elden Ring')
+    id.append(run['category'])
+    type.append('category')
+    # TODO: match category id's with all game category names and then add category name to label_name
+
+for run in er_anyperc_glitchless_top10_data['runs']:
+    top_ten_run_id.append(run['run']['id'])
+    top_ten_player_id1.append(run['run']['players'][0]['id'])
+    if len(run['run']['players']) > 1:
+        top_ten_player_id2.append(run['run']['players'][1]['id'])
+
+# # define configuration parameters for connecting to source database
+# extraction_data_config = {
+#     'dbname': 'speedrun_db',
+#     'user': 'postgres',
+#     'password': 'secret',
+#     # use the service name from docker-compose.yaml as hostname
+#     'host': 'speedrun_postgres'
+# }
+
+# # define configuration parameters for connecting to destination database
+# destination_config = {
+#     'dbname': 'destination_db',
+#     'user': 'postgres',
+#     'password': 'secret',
+#     # use the service name from docker-compose.yaml as hostname
+#     'host': 'destination_postgres'
+# }
+
+# # uses pg_dump command to dump the data from source database to SQL file
+# dump_command = [
+#     'pg_dump',
+#     '-h', extraction_data_config['host'],
+#     '-U', extraction_data_config['user'],
+#     '-d', extraction_data_config['dbname'],
+#     '-f', 'data_dump.sql',
+#     # avoid being prompted for password every time
+#     '-w'
+# ]
 
 # set the PGPASSWORD environment variable to avoid password prompt
-subprocess_env = dict(PGPASSWORD=source_config['password'])
+# subprocess_env = dict(PGPASSWORD=extraction_data_config['password'])
 
 # execute dump command
 # subprocess.run(dump_command, env=subprocess_env, check=True)
 
 # use psql to load the dumped SQL file into the destination database
-load_command = [
-    'psql',
-    '-h', destination_config['host'],
-    '-U', destination_config['user'],
-    '-d', destination_config['dbname'],
-    '-a', '-f', 'data_dump.sql'
-]
+# load_command = [
+#     'psql',
+#     '-h', destination_config['host'],
+#     '-U', destination_config['user'],
+#     '-d', destination_config['dbname'],
+#     '-a', '-f', 'data_dump.sql'
+# ]
 
 # set the PGPASSWORD environment variable for the destination database
-subprocess_env = dict(PGPASSWORD=destination_config['password'])
+# subprocess_env = dict(PGPASSWORD=destination_config['password'])
 
 # execute the load command
 # subprocess.run(load_command, env=subprocess_env, check=True)
