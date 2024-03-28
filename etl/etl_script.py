@@ -181,6 +181,24 @@ def get_run_times_from_top10(top10_data):
     return placement_times
 
 
+def get_player_name_by_id(game_players, player_id):
+    if player_id is not None:
+        for player in game_players:
+            if player['player_id1'] == player_id:
+                return player['player_name1']
+            if player['player_id2'] == player_id:
+                return player['player_name2']
+    return None
+
+
+def get_category_name_by_id(game_categories, category_id):
+    if category_id is not None:
+        for category in game_categories:
+            if game_categories['category_id'] == category_id:
+                return game_categories['category_id']
+    return None
+
+
 def prepare_id_dataframe(id_dict, er_categories, er_players, smo_categories, smo_players, spyro_categories, spyro_players, lop_categories, lop_players):
     combine_id_data(id_dict, er_categories, er_players)
     combine_id_data(id_dict, smo_categories, smo_players)
@@ -191,13 +209,107 @@ def prepare_id_dataframe(id_dict, er_categories, er_players, smo_categories, smo
     return id_df
 
 
-def prepare_top_ten_dataframe(top_ten_dict, ):
-    pass
+def prepare_top_ten_dataframe(top_ten_dict, top_ten_runs, game_categories, all_players, game_name):
+    top_ten_run_id = []
+    top_ten_game_name = []
+    top_ten_category_id = []
+    top_ten_category_name = []
+    top_ten_placement = []
+    top_ten_player_id1 = []
+    top_ten_player_id2 = []
+    top_ten_player_name1 = []
+    top_ten_player_name2 = []
+    top_ten_runtime = []
+    top_ten_verification_date = []
+    top_ten_retrieval_date = []
+
+    for run in top_ten_runs:
+        top_ten_run_id.append(run['run']['id'])
+        top_ten_game_name.append('Elden Ring')
+        category_id = run['category']
+        top_ten_category_id.append(category_id)
+        category_name = get_category_name_by_id(game_categories, category_id)
+        top_ten_category_name.append(category_name)
+        top_ten_placement.append(run['placement'])
+        player_id1 = run['run']['players'][0]['id']
+        top_ten_player_id1.append(player_id1)
+        if len(run['run']['players']) > 1:
+            player_id2 = run['run']['players'][1]['id']
+            top_ten_player_id2.append(player_id2)
+        player_name1 = get_player_name_by_id(all_players, player_id1)
+        player_name2 = get_player_name_by_id(all_players, player_id2)
+        top_ten_player_name1.append(player_name1)
+        top_ten_player_name2.append(player_name2)
+        top_ten_runtime.append(run['times']['primary_t'])
+        top_ten_verification_date.append(run['submitted'])
+        top_ten_retrieval_date.append(datetime.datetime.now())
+
+    top_ten_dict['run_id'].extend(top_ten_run_id)
+    top_ten_dict['game_name'].extend(game_name)
+    top_ten_dict['category_id'].extend(top_ten_category_id)
+    top_ten_dict['category_name'].extend(top_ten_category_name)
+    top_ten_dict['placement'].extend(top_ten_placement)
+    top_ten_dict['player_id1'].extend(top_ten_player_id1)
+    top_ten_dict['player_name1'].extend(top_ten_player_name1)
+    top_ten_dict['player_id2'].extend(top_ten_player_id2)
+    top_ten_dict['player_name2'].extend(top_ten_player_name2)
+    top_ten_dict['runtime'].extend(top_ten_runtime)
+    top_ten_dict['verification_date'].extend(top_ten_verification_date)
+    top_ten_dict['retrieval_date'].extend(top_ten_retrieval_date)
+
+    top_ten_df = pd.DataFrame(top_ten_dict, columns=['run_id', 'game_name', 'category_id', 'category_name', 'placement',
+                              'player_id1', 'player_name1', 'player_id2', 'player_name2', 'runtime', 'verification_date', 'retrieval_date'])
+    return top_ten_df
 
 
-def prepare_all_runs_dataframe(all_runs_dict, ):
-    pass
+def prepare_all_runs_dataframe(all_runs_dict, all_runs, game_categories, all_players, game_name):
+    all_runs_run_id = []
+    all_runs_game_name = []
+    all_runs_category_id = []
+    all_runs_category_name = []
+    all_runs_player_id1 = []
+    all_runs_player_id2 = []
+    all_runs_player_name1 = []
+    all_runs_player_name2 = []
+    all_runs_runtime = []
+    all_runs_retrieval_date = []
 
+    for run in all_runs:
+        all_runs_run_id.append(run['id'])
+        all_runs_game_name.append(game_name)
+        category_id = run['category']
+        all_runs_category_id.append(category_id)
+        category_name = get_category_name_by_id(game_categories, category_id)
+        all_runs_category_name.append(category_name)
+        player_id1 = run['players']['data'][0]['id']
+        player_id2 = None
+        all_runs_player_id1.append(player_id1)
+        if len(run['players']) > 1:
+            player_id2 = run['players']['data'][1]['id']
+            all_runs_player_id2.append(player_id2)
+        player_name1 = get_player_name_by_id(all_players, player_id1)
+        player_name2 = get_player_name_by_id(all_players, player_id2)
+        all_runs_player_id1.append(player_id1)
+        all_runs_player_name1.append(player_name1)
+        all_runs_player_id2.append(player_id2)
+        all_runs_player_name2.append(player_name2)
+        all_runs_runtime.append(run['times']['primary_t'])
+        all_runs_retrieval_date.append(datetime.datetime.now())
+
+    all_runs_dict['run_id'].extend(all_runs_run_id)
+    all_runs_dict['game_name'].extend(all_runs_game_name)
+    all_runs_dict['category_id'].extend(all_runs_category_id)
+    all_runs_dict['category_name'].extend(all_runs_category_name)
+    all_runs_dict['player_id1'].extend(all_runs_player_id1)
+    all_runs_dict['player_name1'].extend(all_runs_player_name1)
+    all_runs_dict['player_id2'].extend(all_runs_player_id2)
+    all_runs_dict['player_name2'].extend(all_runs_player_name2)
+    all_runs_dict['runtime'].extend(all_runs_runtime)
+    all_runs_retrieval_date['retrieval_date'].extend(all_runs_retrieval_date)
+
+    all_runs_df = pd.DataFrame(all_runs_dict, columns=['run_id', 'game_name', 'category_id', 'category_name', 'placement',
+                               'player_id1', 'player_name1', 'player_id2', 'player_name2', 'runtime', 'verification_date', 'date_of_retrieval'])
+    return all_runs_df
 
 # Set up a connection to PostgreSQL
 
@@ -325,7 +437,7 @@ print("ER All Remembrances Glitchless run times:",
 
 # Because API limits offset up to 10000, it's not possible to extract more than 20k runs
 # from a game without going by category
-# smo_all_runs = get_all_submitted_runs(smo_id)
+smo_all_runs = get_all_submitted_runs(smo_id)
 # List of newest verified runs
 smo_newest_verified_runs = get_newest_runs(smo_id)
 # Data on top 10 runs for SMO Any%
@@ -422,43 +534,330 @@ top_ten_game_name = []
 top_ten_placement = []
 top_ten_player_name1 = []
 top_ten_player_name2 = []
-top_ten_category = []
+top_ten_category_name = []
+top_ten_category_id = []
 top_ten_runtime = []
 top_ten_verification_date = []
 top_ten_retrieval_date = []
 
 # All Runs columns
 all_runs_run_id = []
+all_runs_game_name = []
 all_runs_player_id1 = []
 all_runs_player_id2 = []
-all_runs_game_name = []
 all_runs_player_name1 = []
 all_runs_player_name2 = []
-all_runs_category = []
+all_runs_category_id = []
+all_runs_category_name = []
 all_runs_runtime = []
 all_runs_retrieval_date = []
 
-for run in er_all_runs:
-    all_runs_run_id.append(run['id'])
-    all_runs_player_id1.append(run['players']['data'][0]['id'])
-    if len(run['players']) > 1:
-        all_runs_player_id2.append(run['players']['data'][1]['id'])
-    all_runs_game_name.append('Elden Ring')
-    all_runs_category.append(run['category'])
-    all_runs_runtime.append(run['times']['primary_t'])
-    all_runs_retrieval_date.append(datetime.datetime.now())
-    id.append(run['game'])
-    type.append('game')
-    label_name.append('Elden Ring')
-    id.append(run['category'])
-    type.append('category')
-    # TODO: match category id's with all game category names and then add category name to label_name
+# category_info = {"game_id": game_id,
+#                  "game_name": game_name,
+#                  "category_id": category['id'],
+#                  "category_name": category['name']
+# }
+
+# player = {
+#     "game_id": run['game'],
+#     "player_id1": run['players']['data'][0]['id'],
+#     "player_name1": run['players']['data'][0]['names']['international'],
+#     "player_id2": player_id2,
+#     "player_name2": player_name2
+# }
+
+all_runs_dict = {}
+prepare_all_runs_dataframe(
+    all_runs_dict, er_all_runs, er_categories, er_all_players, elden_ring_name)
+prepare_all_runs_dataframe(all_runs_dict, smo_all_runs,
+                           smo_categories, smo_all_players, smo_name)
+prepare_all_runs_dataframe(
+    all_runs_dict, spyro_all_runs, spyro_categories, spyro_all_players, spyro_name)
+prepare_all_runs_dataframe(
+    all_runs_dict, lop_all_runs, lop_categories, lop_all_players, lop_name)
+
+top_ten_dict = {}
+prepare_top_ten_dataframe(top_ten_dict, )
+prepare_top_ten_dataframe(top_ten_dict, )
+prepare_top_ten_dataframe(top_ten_dict, )
+prepare_top_ten_dataframe(top_ten_dict, )
+
+# for run in er_all_runs:
+#     all_runs_run_id.append(run['id'])
+#     all_runs_game_name.append('Elden Ring')
+#     category_id = run['category']
+#     all_runs_category_id.append(category_id)
+#     category_name = get_category_name_by_id(er_categories, category_id)
+#     all_runs_category_name.append(category_name)
+#     player_id1 = run['players']['data'][0]['id']
+#     player_id2 = None
+#     all_runs_player_id1.append(player_id1)
+#     if len(run['players']) > 1:
+#         player_id2 = run['players']['data'][1]['id']
+#         all_runs_player_id2.append(player_id2)
+#     player_name1 = get_player_name_by_id(er_all_players, player_id1)
+#     player_name2 = get_player_name_by_id(er_all_players, player_id2)
+#     all_runs_player_id1.append(player_id1)
+#     all_runs_player_name1.append(player_name1)
+#     all_runs_player_id2.append(player_id2)
+#     all_runs_player_name2.append(player_name2)
+#     all_runs_runtime.append(run['times']['primary_t'])
+#     all_runs_retrieval_date.append(datetime.datetime.now())
+
+# for run in smo_all_runs:
+#     all_runs_run_id.append(run['id'])
+#     all_runs_game_name.append('Super Mario Odyssey')
+#     category_id = run['category']
+#     all_runs_category_id.append(category_id)
+#     category_name = get_category_name_by_id(smo_categories, category_id)
+#     all_runs_category_name.append(category_name)
+#     player_id1 = run['players']['data'][0]['id']
+#     player_id2 = None
+#     all_runs_player_id1.append(player_id1)
+#     if len(run['players']) > 1:
+#         player_id2 = run['players']['data'][1]['id']
+#         all_runs_player_id2.append(player_id2)
+#     player_name1 = get_player_name_by_id(smo_all_players, player_id1)
+#     player_name2 = get_player_name_by_id(smo_all_players, player_id2)
+#     all_runs_player_id1.append(player_id1)
+#     all_runs_player_name1.append(player_name1)
+#     all_runs_player_id2.append(player_id2)
+#     all_runs_player_name2.append(player_name2)
+#     all_runs_runtime.append(run['times']['primary_t'])
+#     all_runs_retrieval_date.append(datetime.datetime.now())
+
+# for run in spyro_all_runs:
+#     all_runs_run_id.append(run['id'])
+#     all_runs_game_name.append('Spyro The Dragon')
+#     category_id = run['category']
+#     all_runs_category_id.append(category_id)
+#     category_name = get_category_name_by_id(spyro_categories, category_id)
+#     all_runs_category_name.append(category_name)
+#     player_id1 = run['players']['data'][0]['id']
+#     player_id2 = None
+#     all_runs_player_id1.append(player_id1)
+#     if len(run['players']) > 1:
+#         player_id2 = run['players']['data'][1]['id']
+#         all_runs_player_id2.append(player_id2)
+#     player_name1 = get_player_name_by_id(spyro_all_players, player_id1)
+#     player_name2 = get_player_name_by_id(spyro_all_players, player_id2)
+#     all_runs_player_id1.append(player_id1)
+#     all_runs_player_name1.append(player_name1)
+#     all_runs_player_id2.append(player_id2)
+#     all_runs_player_name2.append(player_name2)
+#     all_runs_runtime.append(run['times']['primary_t'])
+#     all_runs_retrieval_date.append(datetime.datetime.now())
+
+# for run in lop_all_runs:
+#     all_runs_run_id.append(run['id'])
+#     all_runs_game_name.append('Lies of P')
+#     category_id = run['category']
+#     all_runs_category_id.append(category_id)
+#     category_name = get_category_name_by_id(lop_categories, category_id)
+#     all_runs_category_name.append(category_name)
+#     player_id1 = run['players']['data'][0]['id']
+#     player_id2 = None
+#     all_runs_player_id1.append(player_id1)
+#     if len(run['players']) > 1:
+#         player_id2 = run['players']['data'][1]['id']
+#         all_runs_player_id2.append(player_id2)
+#     player_name1 = get_player_name_by_id(lop_all_players, player_id1)
+#     player_name2 = get_player_name_by_id(lop_all_players, player_id2)
+#     all_runs_player_id1.append(player_id1)
+#     all_runs_player_name1.append(player_name1)
+#     all_runs_player_id2.append(player_id2)
+#     all_runs_player_name2.append(player_name2)
+#     all_runs_runtime.append(run['times']['primary_t'])
+#     all_runs_retrieval_date.append(datetime.datetime.now())
+
+for run in er_anyperc_top10_data['runs']:
+    top_ten_run_id.append(run['run']['id'])
+    top_ten_game_name.append('Elden Ring')
+    category_id = run['category']
+    top_ten_run_id.append(category_id)
+    category_name = get_category_name_by_id(er_categories, category_id)
+    top_ten_category_name.append(category_name)
+    top_ten_placement.append(run['placement'])
+    player_id1 = run['run']['players'][0]['id']
+    top_ten_player_id1.append(player_id1)
+    if len(run['run']['players']) > 1:
+        player_id2 = run['run']['players'][1]['id']
+        all_runs_player_id2.append(player_id2)
+    player_name1 = get_player_name_by_id(er_all_players, player_id1)
+    player_name2 = get_player_name_by_id(er_all_players, player_id2)
+    top_ten_player_name1.append(player_id1)
+    top_ten_player_name2.append(player_id2)
+    top_ten_runtime.append(run['times']['primary_t'])
+    top_ten_verification_date.append(run['submitted'])
+    top_ten_retrieval_date.append(datetime.datetime.now())
 
 for run in er_anyperc_glitchless_top10_data['runs']:
     top_ten_run_id.append(run['run']['id'])
-    top_ten_player_id1.append(run['run']['players'][0]['id'])
+    top_ten_game_name.append('Elden Ring')
+    category_id = run['category']
+    top_ten_run_id.append(category_id)
+    category_name = get_category_name_by_id(er_categories, category_id)
+    top_ten_category_name.append(category_name)
+    top_ten_placement.append(run['placement'])
+    player_id1 = run['run']['players'][0]['id']
+    top_ten_player_id1.append(player_id1)
     if len(run['run']['players']) > 1:
-        top_ten_player_id2.append(run['run']['players'][1]['id'])
+        player_id2 = run['run']['players'][1]['id']
+        all_runs_player_id2.append(player_id2)
+    player_name1 = get_player_name_by_id(er_all_players, player_id1)
+    player_name2 = get_player_name_by_id(er_all_players, player_id2)
+    top_ten_player_name1.append(player_id1)
+    top_ten_player_name2.append(player_id2)
+    top_ten_runtime.append(run['times']['primary_t'])
+    top_ten_verification_date.append(run['submitted'])
+    top_ten_retrieval_date.append(datetime.datetime.now())
+
+for run in er_remembrances_glitchless_top10_data['runs']:
+    top_ten_run_id.append(run['run']['id'])
+    top_ten_game_name.append('Elden Ring')
+    category_id = run['category']
+    top_ten_run_id.append(category_id)
+    category_name = get_category_name_by_id(smo_categories, category_id)
+    top_ten_category_name.append(category_name)
+    top_ten_placement.append(run['placement'])
+    player_id1 = run['run']['players'][0]['id']
+    top_ten_player_id1.append(player_id1)
+    if len(run['run']['players']) > 1:
+        player_id2 = run['run']['players'][1]['id']
+        all_runs_player_id2.append(player_id2)
+    player_name1 = get_player_name_by_id(er_all_players, player_id1)
+    player_name2 = get_player_name_by_id(er_all_players, player_id2)
+    top_ten_player_name1.append(player_id1)
+    top_ten_player_name2.append(player_id2)
+    top_ten_runtime.append(run['times']['primary_t'])
+    top_ten_verification_date.append(run['submitted'])
+    top_ten_retrieval_date.append(datetime.datetime.now())
+
+for run in smo_anyperc_top10_data['runs']:
+    top_ten_run_id.append(run['run']['id'])
+    top_ten_game_name.append('Super Mario Odyssey')
+    category_id = run['category']
+    top_ten_run_id.append(category_id)
+    category_name = get_category_name_by_id(smo_categories, category_id)
+    top_ten_category_name.append(category_name)
+    top_ten_placement.append(run['placement'])
+    player_id1 = run['run']['players'][0]['id']
+    top_ten_player_id1.append(player_id1)
+    if len(run['run']['players']) > 1:
+        player_id2 = run['run']['players'][1]['id']
+        all_runs_player_id2.append(player_id2)
+    player_name1 = get_player_name_by_id(smo_all_players, player_id1)
+    player_name2 = get_player_name_by_id(smo_all_players, player_id2)
+    top_ten_player_name1.append(player_id1)
+    top_ten_player_name2.append(player_id2)
+    top_ten_runtime.append(run['times']['primary_t'])
+    top_ten_verification_date.append(run['submitted'])
+    top_ten_retrieval_date.append(datetime.datetime.now())
+
+for run in smo_100perc_top10_data['runs']:
+    top_ten_run_id.append(run['run']['id'])
+    top_ten_game_name.append('Super Mario Odyssey')
+    category_id = run['category']
+    top_ten_run_id.append(category_id)
+    category_name = get_category_name_by_id(smo_categories, category_id)
+    top_ten_category_name.append(category_name)
+    top_ten_placement.append(run['placement'])
+    player_id1 = run['run']['players'][0]['id']
+    top_ten_player_id1.append(player_id1)
+    if len(run['run']['players']) > 1:
+        player_id2 = run['run']['players'][1]['id']
+        all_runs_player_id2.append(player_id2)
+    player_name1 = get_player_name_by_id(smo_all_players, player_id1)
+    player_name2 = get_player_name_by_id(smo_all_players, player_id2)
+    top_ten_player_name1.append(player_id1)
+    top_ten_player_name2.append(player_id2)
+    top_ten_runtime.append(run['times']['primary_t'])
+    top_ten_verification_date.append(run['submitted'])
+    top_ten_retrieval_date.append(datetime.datetime.now())
+
+for run in spyro_anyperc_top10_data['runs']:
+    top_ten_run_id.append(run['run']['id'])
+    top_ten_game_name.append('Spyro the Dragon')
+    category_id = run['category']
+    top_ten_run_id.append(category_id)
+    category_name = get_category_name_by_id(spyro_categories, category_id)
+    top_ten_category_name.append(category_name)
+    top_ten_placement.append(run['placement'])
+    player_id1 = run['run']['players'][0]['id']
+    top_ten_player_id1.append(player_id1)
+    if len(run['run']['players']) > 1:
+        player_id2 = run['run']['players'][1]['id']
+        all_runs_player_id2.append(player_id2)
+    player_name1 = get_player_name_by_id(spyro_all_players, player_id1)
+    player_name2 = get_player_name_by_id(spyro_all_players, player_id2)
+    top_ten_player_name1.append(player_id1)
+    top_ten_player_name2.append(player_id2)
+    top_ten_runtime.append(run['times']['primary_t'])
+    top_ten_verification_date.append(run['submitted'])
+    top_ten_retrieval_date.append(datetime.datetime.now())
+
+for run in spyro_120perc_top10_data['runs']:
+    top_ten_run_id.append(run['run']['id'])
+    top_ten_game_name.append('Spyro the Dragon')
+    category_id = run['category']
+    top_ten_run_id.append(category_id)
+    category_name = get_category_name_by_id(spyro_categories, category_id)
+    top_ten_category_name.append(category_name)
+    top_ten_placement.append(run['placement'])
+    player_id1 = run['run']['players'][0]['id']
+    top_ten_player_id1.append(player_id1)
+    if len(run['run']['players']) > 1:
+        player_id2 = run['run']['players'][1]['id']
+        all_runs_player_id2.append(player_id2)
+    player_name1 = get_player_name_by_id(spyro_all_players, player_id1)
+    player_name2 = get_player_name_by_id(spyro_all_players, player_id2)
+    top_ten_player_name1.append(player_id1)
+    top_ten_player_name2.append(player_id2)
+    top_ten_runtime.append(run['times']['primary_t'])
+    top_ten_verification_date.append(run['submitted'])
+    top_ten_retrieval_date.append(datetime.datetime.now())
+
+for run in lop_anyperc_top10_data['runs']:
+    top_ten_run_id.append(run['run']['id'])
+    top_ten_game_name.append('Spyro the Dragon')
+    category_id = run['category']
+    top_ten_run_id.append(category_id)
+    category_name = get_category_name_by_id(lop_categories, category_id)
+    top_ten_category_name.append(category_name)
+    top_ten_placement.append(run['placement'])
+    player_id1 = run['run']['players'][0]['id']
+    top_ten_player_id1.append(player_id1)
+    if len(run['run']['players']) > 1:
+        player_id2 = run['run']['players'][1]['id']
+        all_runs_player_id2.append(player_id2)
+    player_name1 = get_player_name_by_id(lop_all_players, player_id1)
+    player_name2 = get_player_name_by_id(lop_all_players, player_id2)
+    top_ten_player_name1.append(player_id1)
+    top_ten_player_name2.append(player_id2)
+    top_ten_runtime.append(run['times']['primary_t'])
+    top_ten_verification_date.append(run['submitted'])
+    top_ten_retrieval_date.append(datetime.datetime.now())
+
+for run in lop_allergobosses_top10_data['runs']:
+    top_ten_run_id.append(run['run']['id'])
+    top_ten_game_name.append('Spyro the Dragon')
+    category_id = run['category']
+    top_ten_run_id.append(category_id)
+    category_name = get_category_name_by_id(lop_categories, category_id)
+    top_ten_category_name.append(category_name)
+    top_ten_placement.append(run['placement'])
+    player_id1 = run['run']['players'][0]['id']
+    top_ten_player_id1.append(player_id1)
+    if len(run['run']['players']) > 1:
+        player_id2 = run['run']['players'][1]['id']
+        all_runs_player_id2.append(player_id2)
+    player_name1 = get_player_name_by_id(lop_all_players, player_id1)
+    player_name2 = get_player_name_by_id(lop_all_players, player_id2)
+    top_ten_player_name1.append(player_id1)
+    top_ten_player_name2.append(player_id2)
+    top_ten_runtime.append(run['times']['primary_t'])
+    top_ten_verification_date.append(run['submitted'])
+    top_ten_retrieval_date.append(datetime.datetime.now())
 
 # # define configuration parameters for connecting to source database
 # extraction_data_config = {
