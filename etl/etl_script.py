@@ -93,8 +93,8 @@ def get_all_run_categories(game_id, game_name):
     return categories
 
 
-# Combines category data, player data, and run data to create dictionary. Dictionary is intended to be converted into a pandas dataframe to easily load into database
-def combine_id_data(id_dict, all_runs, category_data, player_data):
+# Combines category data and player data to create dictionary. Dictionary is intended to be converted into a pandas dataframe to easily load into database
+def combine_id_data(id_dict, category_data, player_data):
     ids = []
     types = []
     label_names = []
@@ -125,6 +125,10 @@ def combine_id_data(id_dict, all_runs, category_data, player_data):
                 ids.append(player_id2)
                 types.append('Player')
                 label_names.append(player_name2)
+
+    id_dict['ids'].extend(ids)
+    id_dict['types'].extend(types)
+    id_dict['label_names'].extend(label_names)
 
 
 # Calls API to get top 10 verified times for a given category of runs for a given game. Includes player info in embed for better player identification. Returns JSON response.
@@ -175,6 +179,25 @@ def get_run_times_from_top10(top10_data):
         place = run['place']
         placement_times.append({place: run['run']['times']['primary_t']})
     return placement_times
+
+
+def prepare_id_dataframe(id_dict, er_categories, er_players, smo_categories, smo_players, spyro_categories, spyro_players, lop_categories, lop_players):
+    combine_id_data(id_dict, er_categories, er_players)
+    combine_id_data(id_dict, smo_categories, smo_players)
+    combine_id_data(id_dict, spyro_categories, spyro_players)
+    combine_id_data(id_dict, lop_categories, lop_players)
+
+    id_df = pd.DataFrame(id_dict, columns=["id", "type", "label_name"])
+    return id_df
+
+
+def prepare_top_ten_dataframe(top_ten_dict, ):
+    pass
+
+
+def prepare_all_runs_dataframe(all_runs_dict, ):
+    pass
+
 
 # Set up a connection to PostgreSQL
 
@@ -232,7 +255,7 @@ lop_name = "Lies of P"
 lop_anyperc_id = "mke1p392"
 lop_allergobosses_id = "xk9z63x2"
 
-# Extracting id data
+# Extracting and transforming id data. Id data needs to be loaded first to be used by the Top Ten and All Runs tables.
 
 er_categories = get_all_run_categories(er_id)
 smo_categories = get_all_run_categories(smo_id)
@@ -246,6 +269,11 @@ spyro_all_runs = get_all_submitted_runs(spyro_id)
 spyro_all_players = get_all_player_data(spyro_all_runs)
 lop_all_runs = get_all_submitted_runs(lop_id)
 lop_all_players = get_all_player_data(lop_all_runs)
+
+id_dict = {}
+
+prepare_id_dataframe(id_dict, er_categories, er_all_players, smo_categories,
+                     smo_all_players, spyro_categories, spyro_all_players, lop_categories, lop_all_players)
 
 
 # Extracting Elden Ring data
@@ -409,11 +437,6 @@ all_runs_player_name2 = []
 all_runs_category = []
 all_runs_runtime = []
 all_runs_retrieval_date = []
-
-# Ids columns
-id = []
-type = []
-label_name = []
 
 for run in er_all_runs:
     all_runs_run_id.append(run['id'])
