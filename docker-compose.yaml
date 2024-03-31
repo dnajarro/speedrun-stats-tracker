@@ -4,9 +4,10 @@ services:
   speedrun_postgres:
     image: postgres:15
     ports:
-      - "5433:5432"
+      - "5432:5432"
     networks:
       - speedrun_stats_network
+    container_name: speedrun_db_container
     environment:
       POSTGRES_DB: speedrun_db
       POSTGRES_USER: postgres
@@ -37,6 +38,15 @@ services:
       - speedrun_stats_network
     depends_on:
       - speedrun_postgres
+  
+  # web UI that queries the database
+  # adminer:
+  #   image: adminer
+  #   restart: always
+  #   depends_on:
+  #     - speedrun_db
+  #   ports:
+  #     - 8080:8080
 
   # postgres:
   #   image: postgres:latest
