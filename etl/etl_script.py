@@ -368,33 +368,8 @@ def prepare_all_runs_dict(all_runs_dict, table_run_ids, all_runs, game_categorie
     all_runs_dict['retrieval_date'].extend(all_runs_retrieval_date)
 
 
-# Set up a connection to PostgreSQL
-
-def wait_for_postgres(host, max_retries=5, delay_seconds=5):
-    retries = 0
-    while retries < max_retries:
-        try:
-            result = subprocess.run(
-                ["pg_isready", "-h", host], check=True, capture_output=True, text=True)
-            if "accepting connections" in result.stdout:
-                print("Successfully connected to PostgreSQL!")
-                return True
-        except subprocess.CalledProcessError as e:
-            print(f"Error connecting to PostgreSQL: {e}")
-            retries += 1
-            print(
-                f"Retrying in {delay_seconds} seconds... (Attempt {retries}/{max_retries})")
-            time.sleep(delay_seconds)
-    print("Max retries reached. Exiting.")
-    return False
-
-
-# connect to database
-# if not wait_for_postgres(host="source_postgres"):
-    # exit(1)
-
 print("Starting ETL script...")
-print("Extracting game data...")
+print("Beginning Extraction and Transformation...")
 
 # Elden Ring API calls
 er_id = "nd28z0ed"
@@ -574,7 +549,7 @@ lop_anyperc_top10_run_times = get_run_times_from_top10(lop_anyperc_top10_data)
 lop_allergobosses_top10_run_times = get_run_times_from_top10(
     lop_allergobosses_top10_data)
 
-print("Completed Extraction and Transformation....")
+print("Completed Extraction...")
 
 print("Preparing All Runs dataframe")
 
@@ -640,9 +615,8 @@ prepare_top_ten_dict(top_ten_dict, table_run_ids, table_top_ten_run_ids, lop_all
                      smo_categories, smo_all_players, smo_name)
 top_ten_df = pd.DataFrame(top_ten_dict, columns=['run_id', 'game_name', 'category_id', 'category_name', 'placement',
                                                  'player_id1', 'player_name1', 'player_id2', 'player_name2', 'runtime', 'verification_date', 'retrieval_date'])
-
-conn_url = 'postgresql+psycopg2://postgres:secret@speedrun_db_container:5432/speedrun_db'
-
+print("Completed Transformation...")
+print("Beginning Load...")
 engine = create_engine(conn_url)
 conn = engine.connect()
 ids_table_name = "ids"

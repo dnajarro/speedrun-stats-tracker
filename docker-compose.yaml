@@ -15,6 +15,19 @@ services:
     volumes:
       - ./source_db_init/init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  flaskapp:
+    container_name: flaskapp
+    image: flaskapp:latest
+    build:
+      context: ./flaskapp
+      dockerfile: flask.dockerfile
+    ports:
+      - 4000:4000
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:secret@speedrun_db_container:5432/speedrun_db
+    depends_on:
+      - speedrun_postgres
+
   # etl_script:
   #   build:
   #     context: ./etl
@@ -61,7 +74,7 @@ services:
     volumes:
       # map dags
       - ./airflow/dags:/opt/airflow/dags
-      # map elt folder
+      # map etl folder
       - ./etl:/opt/airflow/etl
       # gives Airflow access to the Docker network through the socket
       - /var/run/docker.sock:/var/run/docker.sock
@@ -93,7 +106,7 @@ services:
     volumes:
       # map dags
       - ./airflow/dags:/opt/airflow/dags
-      # map elt folder
+      # map etl folder
       - ./etl:/opt/airflow/etl
       # gives Airflow access to the Docker network through the socket
       - /var/run/docker.sock:/var/run/docker.sock
