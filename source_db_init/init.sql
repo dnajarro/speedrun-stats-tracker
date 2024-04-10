@@ -27,7 +27,8 @@ CREATE TABLE all_runs (
 );
 
 CREATE TABLE ids (
-    id VARCHAR(50),
+    id VARCHAR(100) PRIMARY KEY,
+    speedrun_id VARCHAR(50),
     id_type VARCHAR(50),
     label_name VARCHAR(50)
 );

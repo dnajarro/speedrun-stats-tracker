@@ -6,6 +6,8 @@ from sqlalchemy import create_engine
 import psycopg2
 import pandas as pd
 import numpy as np
+from uuid import uuid4
+
 
 # ER = Elden Ring
 # SMO = Super Mario Odyssey
@@ -112,6 +114,7 @@ def get_all_run_categories(game_id, game_name):
 # Combines category data and player data to create dictionary. Dictionary is intended to be converted into a pandas dataframe to easily load into database
 def combine_id_data(id_dict, table_ids, table_label_names, category_data, player_data):
     ids = []
+    speedrun_ids = []
     types = []
     label_names = []
     for category in category_data:
@@ -124,10 +127,12 @@ def combine_id_data(id_dict, table_ids, table_label_names, category_data, player
         if game_name or category_name in table_label_names:
             continue
         else:
-            ids.append(game_id)
+            id = datetime.datetime.now().strftime('%Y%m-%d%H-%M%S-') + str(uuid4())
+            ids.append(id)
+            speedrun_ids.append(game_id)
             types.append('Game')
             label_names.append(game_name)
-            ids.append(category_id)
+            speedrun_ids.append(category_id)
             types.append('Category')
             label_names.append(category_name)
     for player in player_data:
@@ -138,7 +143,9 @@ def combine_id_data(id_dict, table_ids, table_label_names, category_data, player
         if player_name1 in table_label_names:
             continue
         else:
-            ids.append(player_id1)
+            id = datetime.datetime.now().strftime('%Y%m-%d%H-%M%S-') + str(uuid4())
+            ids.append(id)
+            speedrun_ids.append(player_id1)
             types.append('Player')
             label_names.append(player_name1)
         if player['player_id2'] is not None:
@@ -149,11 +156,14 @@ def combine_id_data(id_dict, table_ids, table_label_names, category_data, player
             if player_name2 in table_label_names:
                 continue
             else:
-                ids.append(player_id2)
+                id = datetime.datetime.now().strftime('%Y%m-%d%H-%M%S-') + str(uuid4())
+                ids.append(id)
+                speedrun_ids.append(player_id2)
                 types.append('Player')
                 label_names.append(player_name2)
 
     id_dict['id'].extend(np.array(ids))
+    id_dict['speedrun_id'].extend(np.array(speedrun_ids))
     id_dict['id_type'].extend(np.array(types))
     id_dict['label_name'].extend(np.array(label_names))
 
@@ -228,6 +238,7 @@ def get_category_name_by_id(game_categories, category_id):
 
 def prepare_id_dataframe(id_dict, table_ids, table_label_names, er_categories, er_players, smo_categories, smo_players, spyro_categories, spyro_players, lop_categories, lop_players):
     id_dict['id'] = []
+    id_dict['speedrun_id'] = []
     id_dict['id_type'] = []
     id_dict['label_name'] = []
     combine_id_data(id_dict, table_ids, table_label_names,
@@ -239,7 +250,8 @@ def prepare_id_dataframe(id_dict, table_ids, table_label_names, er_categories, e
     combine_id_data(id_dict, table_ids, table_label_names,
                     lop_categories, lop_players)
 
-    id_df = pd.DataFrame(id_dict, columns=["id", "id_type", "label_name"])
+    id_df = pd.DataFrame(
+        id_dict, columns=["id", "speedrun_id", "id_type", "label_name"])
     return id_df
 
 
@@ -386,7 +398,7 @@ smo_100perc_id = "n2y5jwek"
 
 # Spyro API calls
 spyro_id = "576rje18"
-spyro_name = "Spyro The Dragon"
+spyro_name = "Spyro the Dragon"
 spyro_anyperc_id = "lvdo8ykp"
 spyro_120perc_id = "7wkp1gkr"
 
@@ -436,10 +448,10 @@ conn_url = 'postgresql+psycopg2://postgres:secret@speedrun_db_container:5432/spe
 
 engine = create_engine(conn_url)
 conn = engine.connect()
-id_df = pd.read_sql("SELECT id, label_name FROM ids", conn)
+id_df = pd.read_sql("SELECT speedrun_id, label_name FROM ids", conn)
 all_runs_df = pd.read_sql("SELECT run_id FROM all_runs", conn)
 top_ten_df = pd.read_sql("SELECT run_id FROM top_ten", conn)
-table_ids = id_df['id'].to_numpy()
+table_ids = id_df['speedrun_id'].to_numpy()
 table_label_names = id_df['label_name'].to_numpy()
 table_run_ids = all_runs_df['run_id'].to_numpy()
 table_top_ten_run_ids = top_ten_df['run_id'].to_numpy()

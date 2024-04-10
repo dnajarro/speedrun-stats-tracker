@@ -23,6 +23,8 @@ services:
       dockerfile: flask.dockerfile
     ports:
       - 4000:4000
+    networks:
+      - speedrun_stats_network
     environment:
       - DATABASE_URL=postgresql+psycopg2://postgres:secret@speedrun_db_container:5432/speedrun_db
     depends_on:
