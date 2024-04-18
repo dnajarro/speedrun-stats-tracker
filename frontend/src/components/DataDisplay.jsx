@@ -30,7 +30,7 @@ const DataDisplay = ({ application }) => {
 
   const recentRunsCountList = recentRunsGameNames.map((gameName, index) => (
     <li key={index}>
-      <h3>Total validated runs submitted in the last week for {gameName}:</h3>
+      <h3>Total validated runs submitted since last update {gameName}:</h3>
       <p>{recentRuns[gameName].length}</p>
     </li>
   ));

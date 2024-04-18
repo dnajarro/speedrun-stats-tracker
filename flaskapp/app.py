@@ -376,7 +376,7 @@ def get_first_place_time_graph():
                 for i in range(len(category_words)):
                     if i % 2 == 0 and i > 0:
                         condensed_category += "\n"
-                    else:
+                    elif i > 0:
                         condensed_category += " "
                     condensed_category += category_words[i]
             else:
