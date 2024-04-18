@@ -5,6 +5,11 @@ from sqlalchemy import select, and_
 from flask_cors import CORS
 from os import environ
 from datetime import datetime, timedelta
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
+from io import BytesIO
+import matplotlib.pyplot as plt
+import base64
 import time
 
 
@@ -136,7 +141,7 @@ def get_last_week_runs():
             er_name: [], smo_name: [],
             spyro_name: [], lop_name: []
         }
-        one_week_ago = datetime.now() - timedelta(days=7)
+        one_week_ago = datetime.now() - timedelta(days=6, hours=23)
         result = db.session.query(AllRuns).filter(and_(
             AllRuns.retrieval_date > one_week_ago, AllRuns.retrieval_date <= datetime.now())).all()
         for run in result:
@@ -149,7 +154,7 @@ def get_last_week_runs():
 # route to retrieve all top ten results
 
 
-@app.route('/api/flask/topten', methods=['GET'])
+@app.route('/api/flask/toptens', methods=['GET'])
 def get_top_ten():
     try:
         er_anyperc = 'Elden Ring Any%'
@@ -274,3 +279,168 @@ def get_first_places():
         return make_response(jsonify(response), 200)
     except Exception as e:
         return make_response(jsonify({'message': 'error getting runs', 'error': str(e)}), 500)
+
+# route to create the graph for first place time progression
+
+
+@app.route('/api/flask/firstplace/graph', methods=['GET'])
+def get_first_place_time_graph():
+    try:
+        er_anyperc_id = "02qr00pk"
+        er_anyperc = 'Elden Ring Any%'
+        er_anyperc_glitchless = 'Elden Ring Any% Glitchless'
+        er_remembrances_glitchless = 'Elden Ring All Remembrances Glitchless'
+
+        smo_anyperc = 'Super Mario Odyssey Any%'
+        smo_100perc = 'Super Mario Odyssey 100%'
+
+        spyro_anyperc = 'Spyro Any%'
+        spyro_120perc = 'Spyro 120%'
+
+        lop_anyperc = 'Lies of P Any%'
+        lop_allergobosses = 'Lies of P All Ergo Bosses'
+
+        er_anyperc_glitchless_id = "w20e4yvd"
+        er_remembrances_glitchless_id = "9d8nl33d"
+
+        smo_anyperc_id = "w20w1lzd"
+        smo_100perc_id = "n2y5jwek"
+
+        spyro_anyperc_id = "lvdo8ykp"
+        spyro_120perc_id = "7wkp1gkr"
+
+        lop_anyperc_id = "mke1p392"
+        lop_allergobosses_id = "xk9z63x2"
+
+        first_place_dict = {
+            er_anyperc_id: {},
+            er_anyperc_glitchless_id: {},
+            er_remembrances_glitchless_id: {},
+            smo_anyperc_id: {},
+            smo_100perc_id: {},
+            spyro_anyperc_id: {},
+            spyro_120perc_id: {},
+            lop_anyperc_id: {},
+            lop_allergobosses_id: {}
+        }
+
+        category_dict = {
+            er_anyperc_id: er_anyperc,
+            er_anyperc_glitchless_id: er_anyperc_glitchless,
+            er_remembrances_glitchless_id: er_remembrances_glitchless,
+            smo_anyperc_id: smo_anyperc,
+            smo_100perc_id: smo_100perc,
+            spyro_anyperc_id: spyro_anyperc,
+            spyro_120perc_id: spyro_120perc,
+            lop_anyperc_id: lop_anyperc,
+            lop_allergobosses_id: lop_allergobosses
+        }
+
+        stmt = select(TopTen).where(
+            TopTen.placement == 1).order_by(TopTen.retrieval_date)
+        result = db.session.execute(stmt)
+        for run in result.scalars():
+            if run.category_id in category_dict:
+                if run.retrieval_date not in first_place_dict[run.category_id]:
+                    first_place_dict[run.category_id][run.retrieval_date] = []
+                    if len(first_place_dict[run.category_id]) > 1:
+                        prev_retrieval_date = first_place_dict[run.category_id].keys(
+                        )[-2]
+                        prev_runtimes = first_place_dict[run.category_id][prev_retrieval_date]
+                        first_place_dict[run.category_id][run.retrieval_date] = [
+                            x for x in prev_runtimes]
+                first_place_dict[run.category_id][run.retrieval_date].append(
+                    run.runtime)
+        for category_id in first_place_dict.keys():
+            for retrieval_date in first_place_dict[category_id].keys():
+                min_time = min(
+                    first_place_dict[category_id][retrieval_date])
+                first_place_dict[category_id][retrieval_date] = [
+                    min_time]
+        fig, ax = plt.subplots(1, 1)
+        ax.set_title('Fastest times for each category each week')
+        ax.set_xlabel('Retrieval date')
+        ax.set_ylabel('Runtime (s)')
+        retrieval_dates = []
+        for category_id in first_place_dict.keys():
+            runtimes = []
+            retrieval_dates = list(first_place_dict[category_id].keys())
+            retrieval_dates.sort()
+            for retrieval_date in retrieval_dates:
+                runtimes.append(
+                    first_place_dict[category_id][retrieval_date][0])
+            category_name = category_dict[category_id]
+            category_words = category_name.split(" ")
+            condensed_category = ""
+            if len(category_words) > 2:
+                for i in range(len(category_words)):
+                    if i % 2 == 0 and i > 0:
+                        condensed_category += "\n"
+                    else:
+                        condensed_category += " "
+                    condensed_category += category_words[i]
+            else:
+                condensed_category = category_dict[category_id]
+            ax.plot(retrieval_dates, runtimes, 'o-',
+                    label=condensed_category)
+
+        fig.legend(loc=7)
+        fig.tight_layout()
+        fig.subplots_adjust(right=0.75)
+        buffer = BytesIO()
+        FigureCanvasAgg(fig).print_png(buffer)
+
+        img = base64.b64encode(buffer.getvalue()).decode()
+        return make_response(jsonify({'img': img}), 200)
+    except Exception as e:
+        return make_response(jsonify({'message': 'error getting first place time graph', 'error': str(e)}), 500)
+
+# route to create the graph for the number of runs submitted since first recorded
+
+
+@app.route('/api/flask/allruns/graph', methods=['GET'])
+def get_runs_graph():
+    try:
+        er_name = 'Elden Ring'
+        smo_name = 'Super Mario Odyssey'
+        spyro_name = 'Spyro the Dragon'
+        lop_name = 'Lies of P'
+
+        all_runs_dict = {
+            er_name: {}, smo_name: {},
+            spyro_name: {}, lop_name: {}
+        }
+
+        stmt = select(AllRuns).order_by(AllRuns.retrieval_date)
+        result = db.session.execute(stmt)
+        for run in result.scalars():
+            if run.game_name in all_runs_dict:
+                if run.retrieval_date not in all_runs_dict[run.game_name]:
+                    all_runs_dict[run.game_name][run.retrieval_date] = 0
+                    if len(all_runs_dict[run.game_name]) > 1:
+                        prev_retrieval_date = all_runs_dict[run.game_name].keys(
+                        )[-2]
+                        prev_runs = all_runs_dict[run.game_name][prev_retrieval_date]
+                        all_runs_dict[run.game_name][run.retrieval_date] = prev_runs
+                all_runs_dict[run.game_name][run.retrieval_date] += 1
+        fig, ax = plt.subplots(1, 1)
+        ax.set_title('Number of runs submitted by game each week')
+        ax.set_xlabel('Retrieval date')
+        ax.set_ylabel('Number of runs')
+        for game_name in all_runs_dict.keys():
+            num_runs = []
+            retrieval_dates = list(all_runs_dict[game_name].keys())
+            retrieval_dates.sort()
+            for retrieval_date in retrieval_dates:
+                num_runs.append(all_runs_dict[game_name][retrieval_date])
+            ax.plot(retrieval_dates, num_runs, 'o-', label=game_name)
+        fig.legend(loc=7)
+        fig.tight_layout()
+        fig.subplots_adjust(right=0.7)
+        buffer = BytesIO()
+        FigureCanvasAgg(fig).print_png(buffer)
+
+        img = base64.b64encode(buffer.getvalue()).decode()
+        return make_response(jsonify({'img': img}), 200)
+    except Exception as e:
+        return make_response(jsonify({'message': 'error getting number of runs submitted graph', 'error': str(e)}), 500)

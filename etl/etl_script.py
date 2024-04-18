@@ -578,12 +578,16 @@ all_runs_dict['player_name2'] = []
 all_runs_dict['runtime'] = []
 all_runs_dict['retrieval_date'] = []
 
+# Elden Ring All Runs
 prepare_all_runs_dict(
     all_runs_dict, table_run_ids, er_all_runs, er_categories, elden_ring_name)
+# SMO All Runs
 prepare_all_runs_dict(all_runs_dict, table_run_ids, smo_all_runs,
                       smo_categories, smo_name)
+# Spyro All Runs
 prepare_all_runs_dict(
     all_runs_dict, table_run_ids, spyro_all_runs, spyro_categories, spyro_name)
+# Lies of P All Runs
 prepare_all_runs_dict(
     all_runs_dict, table_run_ids, lop_all_runs, lop_categories, lop_name)
 
@@ -607,24 +611,33 @@ top_ten_dict['runtime'] = []
 top_ten_dict['verification_date'] = []
 top_ten_dict['retrieval_date'] = []
 
+# Elden Ring Any% Top Ten
 prepare_top_ten_dict(top_ten_dict, table_run_ids, table_top_ten_run_ids, er_anyperc_top10_data,
                      er_categories, er_all_players, elden_ring_name)
+# Elden Ring Any% Glitchless
 prepare_top_ten_dict(top_ten_dict, table_run_ids, table_top_ten_run_ids, er_anyperc_glitchless_top10_data,
                      er_categories, er_all_players, elden_ring_name)
+# Elden Ring All Remembrances Glitchless Top Ten
 prepare_top_ten_dict(top_ten_dict, table_run_ids, table_top_ten_run_ids, er_remembrances_glitchless_top10_data,
                      er_categories, er_all_players, elden_ring_name)
+# SMO Any% Top Ten
 prepare_top_ten_dict(
     top_ten_dict, table_run_ids, table_top_ten_run_ids, smo_anyperc_top10_data, smo_categories, smo_all_players, smo_name)
+# SMO 100% Top Ten
 prepare_top_ten_dict(
     top_ten_dict, table_run_ids, table_top_ten_run_ids, smo_100perc_top10_data, smo_categories, smo_all_players, smo_name)
+# Spyro Any% Top Ten
 prepare_top_ten_dict(top_ten_dict, table_run_ids, table_top_ten_run_ids, spyro_anyperc_top10_data,
-                     smo_categories, smo_all_players, smo_name)
+                     spyro_categories, spyro_all_players, spyro_name)
+# Spyro 120% Top Ten
 prepare_top_ten_dict(top_ten_dict, table_run_ids, table_top_ten_run_ids, spyro_120perc_top10_data,
-                     smo_categories, smo_all_players, smo_name)
+                     spyro_categories, spyro_all_players, spyro_name)
+# Lies of P Any% Top Ten
 prepare_top_ten_dict(
-    top_ten_dict, table_run_ids, table_top_ten_run_ids, lop_anyperc_top10_data, smo_categories, smo_all_players, smo_name)
+    top_ten_dict, table_run_ids, table_top_ten_run_ids, lop_anyperc_top10_data, lop_categories, lop_all_players, lop_name)
+# Lies of P All Ergo Bosses Top Ten
 prepare_top_ten_dict(top_ten_dict, table_run_ids, table_top_ten_run_ids, lop_allergobosses_top10_data,
-                     smo_categories, smo_all_players, smo_name)
+                     lop_categories, lop_all_players, lop_name)
 top_ten_df = pd.DataFrame(top_ten_dict, columns=['run_id', 'game_name', 'category_id', 'category_name', 'placement',
                                                  'player_id1', 'player_name1', 'player_id2', 'player_name2', 'runtime', 'verification_date', 'retrieval_date'])
 print("Completed Transformation...")
