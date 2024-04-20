@@ -1,0 +1,21 @@
+.Elden-Ring {
+    background-image: url('../res/elden_ring_logo_image.webp');
+    /* opacity: 0.3; */
+}
+
+.Super-Mario-Odyssey {
+    background-image: url('../res/smo_logo.png');
+}
+
+.Spyro-the-Dragon {
+    background-image: url('../res/spyro_logo_image.webp');
+}
+
+.Lies-of-P {
+    background-image: url('../res/lies_of_p_logo.webp');
+}
+
+.title {
+    color: white;
+    -webkit-text-stroke: 2px black;
+}

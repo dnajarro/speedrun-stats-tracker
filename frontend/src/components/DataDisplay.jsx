@@ -17,7 +17,11 @@ const DataDisplay = ({ application }) => {
 
   const topTensList = topTensCategories.map((category, index) => (
     <li key={index}>
-      <TopTen title={category} data={topTens[category]}></TopTen>
+      <TopTen
+        gameName={topTens[category][0]["game_name"]}
+        title={category}
+        data={topTens[category]}
+      ></TopTen>
     </li>
   ));
 

@@ -1,0 +1,16 @@
+const apiUrl = "http://localhost:4000";
+  const [img, setImg] = useState([]);
+
+  const Example = ({ data }) => <img src={`data:image/png;base64,${data}`} />;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/api/flask/allruns/graph`);
+        setImg(response.data["img"]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    fetchData();
+  }, [apiUrl]);

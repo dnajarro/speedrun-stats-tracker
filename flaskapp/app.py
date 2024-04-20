@@ -294,8 +294,8 @@ def get_first_place_time_graph():
         smo_anyperc = 'Super Mario Odyssey Any%'
         smo_100perc = 'Super Mario Odyssey 100%'
 
-        spyro_anyperc = 'Spyro Any%'
-        spyro_120perc = 'Spyro 120%'
+        spyro_anyperc = 'Spyro the Dragon Any%'
+        spyro_120perc = 'Spyro the Dragon 120%'
 
         lop_anyperc = 'Lies of P Any%'
         lop_allergobosses = 'Lies of P All Ergo Bosses'
