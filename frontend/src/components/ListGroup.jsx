@@ -1,14 +1,7 @@
 import ListItem from "./ListItem";
-import style from "./ListGroup-style.css";
+import "./ListGroup-style.css";
 
 const ListGroup = ({ data, datatypes }) => {
-  var hasPlayer2 = false;
-  for (var i = 0; i < data.length; i++) {
-    if (data[i]["player_name2"]) {
-      hasPlayer2 = true;
-      break;
-    }
-  }
   const listItems =
     data &&
     data.map((datapoint, index) => (

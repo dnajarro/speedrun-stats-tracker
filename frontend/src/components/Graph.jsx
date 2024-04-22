@@ -1,7 +1,7 @@
-import style from "./Graph-style.css";
+import "./Graph-style.css";
 
 const Graph = ({ image }) => {
-  return <img src={`data:image/png;base64,${image}`}></img>;
+  return <img src={`data:image/png;base64,${image}`} alt="graph"></img>;
 };
 
 export default Graph;

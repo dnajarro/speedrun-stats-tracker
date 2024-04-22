@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import TopTen from "./TopTen";
 import Graph from "./Graph";
-import style from "./DataDisplay-style.css";
 import axios from "axios";
+import "./DataDisplay-style.css";
 
 const DataDisplay = ({ application }) => {
   const apiURL = "http://127.0.0.1:4000";
@@ -72,7 +72,7 @@ const DataDisplay = ({ application }) => {
     };
 
     fetchData();
-  }, []);
+  });
   return (
     <>
       <ul>{topTensList}</ul>
