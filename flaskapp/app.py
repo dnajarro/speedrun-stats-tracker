@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import select, and_
@@ -12,6 +12,42 @@ import matplotlib.pyplot as plt
 import base64
 import time
 
+ER_NAME = 'Elden Ring'
+SMO_NAME = 'Super Mario Odyssey'
+SPYRO_NAME = 'Spyro the Dragon'
+LOP_NAME = 'Lies of P'
+
+ER_ID = "nd28z0ed"
+SMO_ID = "76r55vd8"
+SPYRO_ID = "576rje18"
+LOP_ID = "4d7n7wl6"
+
+ER_ANYPERC = 'Elden Ring Any%'
+ER_ANYPERC_GLITCHLESS = 'Elden Ring Any% Glitchless'
+ER_REMEMBRANCES_GLITCHLESS = 'Elden Ring All Remembrances Glitchless'
+
+SMO_ANYPERC = 'Super Mario Odyssey Any%'
+SMO_100PERC = 'Super Mario Odyssey 100%'
+
+SPYRO_ANYPERC = 'Spyro the Dragon Any%'
+SPYRO_120PERC = 'Spyro the Dragon 120%'
+
+LOP_ANYPERC = 'Lies of P Any%'
+LOP_ALL_ERGO_BOSSES = 'Lies of P All Ergo Bosses'
+
+ER_ANYPERC_ID = "02qr00pk"
+ER_ANYPERC_GLITCHLESS_ID = "w20e4yvd"
+ER_REMEMBRANCES_GLITCHLESS_ID = "9d8nl33d"
+
+SMO_ANYPERC_ID = "w20w1lzd"
+SMO_100PERC_ID = "n2y5jwek"
+
+SPYRO_ANYPERC_ID = "lvdo8ykp"
+SPYRO_120PERC_ID = "7wkp1gkr"
+
+LOP_ANYPERC_ID = "mke1p392"
+LOP_ALL_ERGO_BOSSES_ID = "xk9z63x2"
+
 
 class Base(DeclarativeBase):
     pass
@@ -21,9 +57,8 @@ db = SQLAlchemy(model_class=Base)
 app = Flask(__name__)
 CORS(app)   # Enable CORS for all routes
 app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL')
-# db = SQLAlchemy(app)
 db.init_app(app)
-time.sleep(5)
+time.sleep(2)
 
 
 class TopTen(db.Model):
@@ -107,14 +142,9 @@ def test():
 @app.route('/api/flask/allruns', methods=['GET'])
 def get_all_runs():
     try:
-        er_name = 'Elden Ring'
-        smo_name = 'Super Mario Odyssey'
-        spyro_name = 'Spyro the Dragon'
-        lop_name = 'Lies of P'
-
         response = {
-            er_name: [], smo_name: [],
-            spyro_name: [], lop_name: []
+            ER_NAME: [], SMO_NAME: [],
+            SPYRO_NAME: [], LOP_NAME: []
         }
 
         stmt = select(AllRuns)
@@ -132,16 +162,11 @@ def get_all_runs():
 @app.route('/api/flask/recentruns', methods=['GET'])
 def get_last_week_runs():
     try:
-        er_name = 'Elden Ring'
-        smo_name = 'Super Mario Odyssey'
-        spyro_name = 'Spyro the Dragon'
-        lop_name = 'Lies of P'
-
         response = {
-            er_name: [], smo_name: [],
-            spyro_name: [], lop_name: []
+            ER_NAME: [], SMO_NAME: [],
+            SPYRO_NAME: [], LOP_NAME: []
         }
-        one_week_ago = datetime.now() - timedelta(days=6, hours=23)
+        one_week_ago = datetime.now() - timedelta(days=6, hours=23, minutes=55)
         result = db.session.query(AllRuns).filter(and_(
             AllRuns.retrieval_date > one_week_ago, AllRuns.retrieval_date <= datetime.now())).all()
         for run in result:
@@ -157,54 +182,28 @@ def get_last_week_runs():
 @app.route('/api/flask/toptens', methods=['GET'])
 def get_top_ten():
     try:
-        er_anyperc = 'Elden Ring Any%'
-        er_anyperc_glitchless = 'Elden Ring Any% Glitchless'
-        er_remembrances_glitchless = 'Elden Ring All Remembrances Glitchless'
-
-        smo_anyperc = 'Super Mario Odyssey Any%'
-        smo_100perc = 'Super Mario Odyssey 100%'
-
-        spyro_anyperc = 'Spyro Any%'
-        spyro_120perc = 'Spyro 120%'
-
-        lop_anyperc = 'Lies of P Any%'
-        lop_allergobosses = 'Lies of P All Ergo Bosses'
-
-        er_anyperc_id = "02qr00pk"
-        er_anyperc_glitchless_id = "w20e4yvd"
-        er_remembrances_glitchless_id = "9d8nl33d"
-
-        smo_anyperc_id = "w20w1lzd"
-        smo_100perc_id = "n2y5jwek"
-
-        spyro_anyperc_id = "lvdo8ykp"
-        spyro_120perc_id = "7wkp1gkr"
-
-        lop_anyperc_id = "mke1p392"
-        lop_allergobosses_id = "xk9z63x2"
-
         category_dict = {
-            er_anyperc_id: er_anyperc,
-            er_anyperc_glitchless_id: er_anyperc_glitchless,
-            er_remembrances_glitchless_id: er_remembrances_glitchless,
-            smo_anyperc_id: smo_anyperc,
-            smo_100perc_id: smo_100perc,
-            spyro_anyperc_id: spyro_anyperc,
-            spyro_120perc_id: spyro_120perc,
-            lop_anyperc_id: lop_anyperc,
-            lop_allergobosses_id: lop_allergobosses
+            ER_ANYPERC_ID: ER_ANYPERC,
+            ER_ANYPERC_GLITCHLESS_ID: ER_ANYPERC_GLITCHLESS,
+            ER_REMEMBRANCES_GLITCHLESS_ID: ER_REMEMBRANCES_GLITCHLESS,
+            SMO_ANYPERC_ID: SMO_ANYPERC,
+            SMO_100PERC_ID: SMO_100PERC,
+            SPYRO_ANYPERC_ID: SPYRO_ANYPERC,
+            SPYRO_120PERC_ID: SPYRO_120PERC,
+            LOP_ANYPERC_ID: LOP_ANYPERC,
+            LOP_ALL_ERGO_BOSSES_ID: LOP_ALL_ERGO_BOSSES
         }
 
         response = {
-            er_anyperc: [],
-            er_anyperc_glitchless: [],
-            er_remembrances_glitchless: [],
-            smo_anyperc: [],
-            smo_100perc: [],
-            spyro_anyperc: [],
-            spyro_120perc: [],
-            lop_anyperc: [],
-            lop_allergobosses: []
+            ER_ANYPERC: [],
+            ER_ANYPERC_GLITCHLESS: [],
+            ER_REMEMBRANCES_GLITCHLESS: [],
+            SMO_ANYPERC: [],
+            SMO_100PERC: [],
+            SPYRO_ANYPERC: [],
+            SPYRO_120PERC: [],
+            LOP_ANYPERC: [],
+            LOP_ALL_ERGO_BOSSES: []
         }
 
         stmt = select(TopTen).order_by(TopTen.placement)
@@ -221,54 +220,28 @@ def get_top_ten():
 @app.route('/api/flask/firstplace', methods=['GET'])
 def get_first_places():
     try:
-        er_anyperc = 'Elden Ring Any%'
-        er_anyperc_glitchless = 'Elden Ring Any% Glitchless'
-        er_remembrances_glitchless = 'Elden Ring All Remembrances Glitchless'
-
-        smo_anyperc = 'Super Mario Odyssey Any%'
-        smo_100perc = 'Super Mario Odyssey 100%'
-
-        spyro_anyperc = 'Spyro Any%'
-        spyro_120perc = 'Spyro 120%'
-
-        lop_anyperc = 'Lies of P Any%'
-        lop_allergobosses = 'Lies of P All Ergo Bosses'
-
-        er_anyperc_id = "02qr00pk"
-        er_anyperc_glitchless_id = "w20e4yvd"
-        er_remembrances_glitchless_id = "9d8nl33d"
-
-        smo_anyperc_id = "w20w1lzd"
-        smo_100perc_id = "n2y5jwek"
-
-        spyro_anyperc_id = "lvdo8ykp"
-        spyro_120perc_id = "7wkp1gkr"
-
-        lop_anyperc_id = "mke1p392"
-        lop_allergobosses_id = "xk9z63x2"
-
         category_dict = {
-            er_anyperc_id: er_anyperc,
-            er_anyperc_glitchless_id: er_anyperc_glitchless,
-            er_remembrances_glitchless_id: er_remembrances_glitchless,
-            smo_anyperc_id: smo_anyperc,
-            smo_100perc_id: smo_100perc,
-            spyro_anyperc_id: spyro_anyperc,
-            spyro_120perc_id: spyro_120perc,
-            lop_anyperc_id: lop_anyperc,
-            lop_allergobosses_id: lop_allergobosses
+            ER_ANYPERC_ID: ER_ANYPERC,
+            ER_ANYPERC_GLITCHLESS_ID: ER_ANYPERC_GLITCHLESS,
+            ER_REMEMBRANCES_GLITCHLESS_ID: ER_REMEMBRANCES_GLITCHLESS,
+            SMO_ANYPERC_ID: SMO_ANYPERC,
+            SMO_100PERC_ID: SMO_100PERC,
+            SPYRO_ANYPERC_ID: SPYRO_ANYPERC,
+            SPYRO_120PERC_ID: SPYRO_120PERC,
+            LOP_ANYPERC_ID: LOP_ANYPERC,
+            LOP_ALL_ERGO_BOSSES_ID: LOP_ALL_ERGO_BOSSES
         }
 
         response = {
-            er_anyperc: [],
-            er_anyperc_glitchless: [],
-            er_remembrances_glitchless: [],
-            smo_anyperc: [],
-            smo_100perc: [],
-            spyro_anyperc: [],
-            spyro_120perc: [],
-            lop_anyperc: [],
-            lop_allergobosses: []
+            ER_ANYPERC: [],
+            ER_ANYPERC_GLITCHLESS: [],
+            ER_REMEMBRANCES_GLITCHLESS: [],
+            SMO_ANYPERC: [],
+            SMO_100PERC: [],
+            SPYRO_ANYPERC: [],
+            SPYRO_120PERC: [],
+            LOP_ANYPERC: [],
+            LOP_ALL_ERGO_BOSSES: []
         }
         stmt = select(TopTen).where(
             TopTen.placement == 1).order_by(TopTen.retrieval_date)
@@ -286,54 +259,28 @@ def get_first_places():
 @app.route('/api/flask/firstplace/graph', methods=['GET'])
 def get_first_place_time_graph():
     try:
-        er_anyperc_id = "02qr00pk"
-        er_anyperc = 'Elden Ring Any%'
-        er_anyperc_glitchless = 'Elden Ring Any% Glitchless'
-        er_remembrances_glitchless = 'Elden Ring All Remembrances Glitchless'
-
-        smo_anyperc = 'Super Mario Odyssey Any%'
-        smo_100perc = 'Super Mario Odyssey 100%'
-
-        spyro_anyperc = 'Spyro the Dragon Any%'
-        spyro_120perc = 'Spyro the Dragon 120%'
-
-        lop_anyperc = 'Lies of P Any%'
-        lop_allergobosses = 'Lies of P All Ergo Bosses'
-
-        er_anyperc_glitchless_id = "w20e4yvd"
-        er_remembrances_glitchless_id = "9d8nl33d"
-
-        smo_anyperc_id = "w20w1lzd"
-        smo_100perc_id = "n2y5jwek"
-
-        spyro_anyperc_id = "lvdo8ykp"
-        spyro_120perc_id = "7wkp1gkr"
-
-        lop_anyperc_id = "mke1p392"
-        lop_allergobosses_id = "xk9z63x2"
-
         first_place_dict = {
-            er_anyperc_id: {},
-            er_anyperc_glitchless_id: {},
-            er_remembrances_glitchless_id: {},
-            smo_anyperc_id: {},
-            smo_100perc_id: {},
-            spyro_anyperc_id: {},
-            spyro_120perc_id: {},
-            lop_anyperc_id: {},
-            lop_allergobosses_id: {}
+            ER_ANYPERC_ID: {},
+            ER_ANYPERC_GLITCHLESS_ID: {},
+            ER_REMEMBRANCES_GLITCHLESS_ID: {},
+            SMO_ANYPERC_ID: {},
+            SMO_100PERC_ID: {},
+            SPYRO_ANYPERC_ID: {},
+            SPYRO_120PERC_ID: {},
+            LOP_ANYPERC_ID: {},
+            LOP_ALL_ERGO_BOSSES_ID: {}
         }
 
         category_dict = {
-            er_anyperc_id: er_anyperc,
-            er_anyperc_glitchless_id: er_anyperc_glitchless,
-            er_remembrances_glitchless_id: er_remembrances_glitchless,
-            smo_anyperc_id: smo_anyperc,
-            smo_100perc_id: smo_100perc,
-            spyro_anyperc_id: spyro_anyperc,
-            spyro_120perc_id: spyro_120perc,
-            lop_anyperc_id: lop_anyperc,
-            lop_allergobosses_id: lop_allergobosses
+            ER_ANYPERC_ID: ER_ANYPERC,
+            ER_ANYPERC_GLITCHLESS_ID: ER_ANYPERC_GLITCHLESS,
+            ER_REMEMBRANCES_GLITCHLESS_ID: ER_REMEMBRANCES_GLITCHLESS,
+            SMO_ANYPERC_ID: SMO_ANYPERC,
+            SMO_100PERC_ID: SMO_100PERC,
+            SPYRO_ANYPERC_ID: SPYRO_ANYPERC,
+            SPYRO_120PERC_ID: SPYRO_120PERC,
+            LOP_ANYPERC_ID: LOP_ANYPERC,
+            LOP_ALL_ERGO_BOSSES_ID: LOP_ALL_ERGO_BOSSES
         }
 
         stmt = select(TopTen).where(
@@ -401,14 +348,9 @@ def get_first_place_time_graph():
 @app.route('/api/flask/allruns/graph', methods=['GET'])
 def get_runs_graph():
     try:
-        er_name = 'Elden Ring'
-        smo_name = 'Super Mario Odyssey'
-        spyro_name = 'Spyro the Dragon'
-        lop_name = 'Lies of P'
-
         all_runs_dict = {
-            er_name: {}, smo_name: {},
-            spyro_name: {}, lop_name: {}
+            ER_NAME: {}, SMO_NAME: {},
+            SPYRO_NAME: {}, LOP_NAME: {}
         }
 
         stmt = select(AllRuns).order_by(AllRuns.retrieval_date)

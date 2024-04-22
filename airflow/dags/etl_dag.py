@@ -28,7 +28,7 @@ dag = DAG(
     'etl',
     default_args=default_args,
     description='An ETL workflow',
-    start_date=datetime(2024, 4, 3),
+    start_date=datetime(2024, 4, 22),
     schedule_interval='@weekly',
     catchup=False,
 )

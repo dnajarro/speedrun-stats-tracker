@@ -1,31 +1,56 @@
+from uuid import uuid4
+from sqlalchemy import create_engine
 import subprocess
 import time
 import requests
 import datetime
-from sqlalchemy import create_engine
 import psycopg2
 import pandas as pd
 import numpy as np
-from uuid import uuid4
 
 
 # ER = Elden Ring
 # SMO = Super Mario Odyssey
+# SPYRO = Spyro the Dragon
 # LOP = Lies of P
 
-# TODO:
-# 1. Read through the Speedrun.com API documentation to determine what API calls we want to make and what we want to store in the databases. DONE
-# 2. Write new init.sql file to initialize the database with the correct schema DONE
-# 3. Rewrite the etl_script.py file to extract data from the API and load it into database; remove second database. DONE
-# 4. Test code. DONE
-# 5. Further modify etl_script.py to pull all desired data and test again. DONE
-# 6. Hook up pipeline to Airflow.
-# 7. Test code. DONE
-# 8. Create simple web application to display and organize data.
-# 9. Pull data from database to web application.
-# 10. Test code.
-
 # Calls API to get all verified, rejected, and under-review runs for a given game. Returns list of runs.
+
+ER_NAME = 'Elden Ring'
+SMO_NAME = 'Super Mario Odyssey'
+SPYRO_NAME = 'Spyro the Dragon'
+LOP_NAME = 'Lies of P'
+
+ER_ID = "nd28z0ed"
+SMO_ID = "76r55vd8"
+SPYRO_ID = "576rje18"
+LOP_ID = "4d7n7wl6"
+
+ER_ANYPERC = 'Elden Ring Any%'
+ER_ANYPERC_GLITCHLESS = 'Elden Ring Any% Glitchless'
+ER_REMEMBRANCES_GLITCHLESS = 'Elden Ring All Remembrances Glitchless'
+
+SMO_ANYPERC = 'Super Mario Odyssey Any%'
+SMO_100PERC = 'Super Mario Odyssey 100%'
+
+SPYRO_ANYPERC = 'Spyro the Dragon Any%'
+SPYRO_120PERC = 'Spyro the Dragon 120%'
+
+LOP_ANYPERC = 'Lies of P Any%'
+LOP_ALL_ERGO_BOSSES = 'Lies of P All Ergo Bosses'
+
+ER_ANYPERC_ID = "02qr00pk"
+ER_ANYPERC_GLITCHLESS_ID = "w20e4yvd"
+ER_REMEMBRANCES_GLITCHLESS_ID = "9d8nl33d"
+
+SMO_ANYPERC_ID = "w20w1lzd"
+SMO_100PERC_ID = "n2y5jwek"
+
+SPYRO_ANYPERC_ID = "lvdo8ykp"
+SPYRO_120PERC_ID = "7wkp1gkr"
+
+LOP_ANYPERC_ID = "mke1p392"
+LOP_ALL_ERGO_BOSSES_ID = "xk9z63x2"
 
 
 def get_all_submitted_runs(game_id):
@@ -383,31 +408,6 @@ def prepare_all_runs_dict(all_runs_dict, table_run_ids, all_runs, game_categorie
 print("Starting ETL script...")
 print("Beginning Extraction and Transformation...")
 
-# Elden Ring API calls
-er_id = "nd28z0ed"
-elden_ring_name = "Elden Ring"
-er_anyperc_id = "02qr00pk"
-er_anyperc_glitchless_id = "w20e4yvd"
-er_remembrances_glitchless_id = "9d8nl33d"
-
-# SMO API calls
-smo_id = "76r55vd8"
-smo_name = "Super Mario Odyssey"
-smo_anyperc_id = "w20w1lzd"
-smo_100perc_id = "n2y5jwek"
-
-# Spyro API calls
-spyro_id = "576rje18"
-spyro_name = "Spyro the Dragon"
-spyro_anyperc_id = "lvdo8ykp"
-spyro_120perc_id = "7wkp1gkr"
-
-# Lies of P API calls
-lop_id = "4d7n7wl6"
-lop_name = "Lies of P"
-lop_anyperc_id = "mke1p392"
-lop_allergobosses_id = "xk9z63x2"
-
 # Extracting and transforming id data. Id data needs to be loaded first to be used by the Top Ten and All Runs tables.
 
 print("Extracting data for id table")
@@ -426,18 +426,18 @@ er_extract_tot = 0
 smo_extract_tot = 0
 spyro_extract_tot = 0
 lop_extract_tot = 0
-er_categories = get_all_run_categories(er_id, elden_ring_name)
-smo_categories = get_all_run_categories(smo_id, smo_name)
-spyro_categories = get_all_run_categories(spyro_id, spyro_name)
-lop_categories = get_all_run_categories(lop_id, lop_name)
+er_categories = get_all_run_categories(ER_ID, ER_NAME)
+smo_categories = get_all_run_categories(SMO_ID, SMO_NAME)
+spyro_categories = get_all_run_categories(SPYRO_ID, SPYRO_NAME)
+lop_categories = get_all_run_categories(LOP_ID, LOP_NAME)
 print("Category data ready")
-er_all_runs = get_all_submitted_runs(er_id)
+er_all_runs = get_all_submitted_runs(ER_ID)
 er_all_players = get_all_player_data(er_all_runs)
-smo_all_runs = get_all_submitted_runs(smo_id)
+smo_all_runs = get_all_submitted_runs(SMO_ID)
 smo_all_players = get_all_player_data(smo_all_runs)
-spyro_all_runs = get_all_submitted_runs(spyro_id)
+spyro_all_runs = get_all_submitted_runs(SPYRO_ID)
 spyro_all_players = get_all_player_data(spyro_all_runs)
-lop_all_runs = get_all_submitted_runs(lop_id)
+lop_all_runs = get_all_submitted_runs(LOP_ID)
 lop_all_players = get_all_player_data(lop_all_runs)
 print("Player and run data ready")
 
@@ -467,16 +467,16 @@ print("id dataframe ready")
 
 print("Extracting ER data")
 # List of all submitted runs
-er_all_runs = get_all_submitted_runs(er_id)
+er_all_runs = get_all_submitted_runs(ER_ID)
 # List of newest verified runs
-er_newest_verified_runs = get_newest_runs(er_id)
+er_newest_verified_runs = get_newest_runs(ER_ID)
 # Data on top 10 runs for ER Any%
-er_anyperc_top10_data = get_top_10(er_id, er_anyperc_id)
+er_anyperc_top10_data = get_top_10(ER_ID, ER_ANYPERC_ID)
 # Data on top 10 runs for ER Any% Glitchless
-er_anyperc_glitchless_top10_data = get_top_10(er_id, er_anyperc_glitchless_id)
+er_anyperc_glitchless_top10_data = get_top_10(ER_ID, ER_ANYPERC_GLITCHLESS_ID)
 # Data on top 10 runs for ER All Remembrances
 er_remembrances_glitchless_top10_data = get_top_10(
-    er_id, er_remembrances_glitchless_id)
+    ER_ID, ER_REMEMBRANCES_GLITCHLESS_ID)
 # Player data on top 10 runs for ER Any%
 er_anyperc_players_data = get_player_data_from_top10(er_anyperc_top10_data)
 # Player data on top 10 runs for ER Any% Glitchless
@@ -499,13 +499,13 @@ er_remembrances_glitchless_top10_run_times = get_run_times_from_top10(
 # Because API limits offset up to 10000, it's not possible to extract more than 20k runs
 # from a game without going by category
 print("Extracting SMO data")
-smo_all_runs = get_all_submitted_runs(smo_id)
+smo_all_runs = get_all_submitted_runs(SMO_ID)
 # List of newest verified runs
-smo_newest_verified_runs = get_newest_runs(smo_id)
+smo_newest_verified_runs = get_newest_runs(SMO_ID)
 # Data on top 10 runs for SMO Any%
-smo_anyperc_top10_data = get_top_10(smo_id, smo_anyperc_id)
+smo_anyperc_top10_data = get_top_10(SMO_ID, SMO_ANYPERC_ID)
 # Data on top 10 runs for SMO 100%
-smo_100perc_top10_data = get_top_10(smo_id, smo_100perc_id)
+smo_100perc_top10_data = get_top_10(SMO_ID, SMO_100PERC_ID)
 # Player data for SMO Any% top 10 runs
 smo_anyperc_players_data = get_player_data_from_top10(smo_anyperc_top10_data)
 # Player data for SMO 100% top 10 runs
@@ -519,13 +519,13 @@ smo_100perc_top10_run_times = get_run_times_from_top10(smo_100perc_top10_data)
 
 print("Extracting Spyro data")
 # List of all submitted runs
-spyro_all_runs = get_all_submitted_runs(spyro_id)
+spyro_all_runs = get_all_submitted_runs(SPYRO_ID)
 # List of newest verified runs
-spyro_newest_verified_runs = get_newest_runs(spyro_id)
+spyro_newest_verified_runs = get_newest_runs(SPYRO_ID)
 # Data on top 10 runs for Spyro Any%
-spyro_anyperc_top10_data = get_top_10(spyro_id, spyro_anyperc_id)
+spyro_anyperc_top10_data = get_top_10(SPYRO_ID, SPYRO_ANYPERC_ID)
 # Data on top 10 runs for Spyro 120%
-spyro_120perc_top10_data = get_top_10(spyro_id, spyro_120perc_id)
+spyro_120perc_top10_data = get_top_10(SPYRO_ID, SPYRO_120PERC_ID)
 # Player data for top 10 runs for Spyro Any%
 spyro_anyperc_players_data = get_player_data_from_top10(
     spyro_anyperc_top10_data)
@@ -543,13 +543,13 @@ spyro_120perc_top10_run_times = get_run_times_from_top10(
 
 # List of all submitted runs
 print("Extracting LoP data")
-lop_all_runs = get_all_submitted_runs(lop_id)
+lop_all_runs = get_all_submitted_runs(LOP_ID)
 # List of newest verified runs
-lop_newest_verified_runs = get_newest_runs(lop_id)
+lop_newest_verified_runs = get_newest_runs(LOP_ID)
 # Data on top 10 runs for LoP Any%
-lop_anyperc_top10_data = get_top_10(lop_id, lop_anyperc_id)
+lop_anyperc_top10_data = get_top_10(LOP_ID, LOP_ANYPERC_ID)
 # Data on top 10 runs for LoP All Bosses
-lop_allergobosses_top10_data = get_top_10(lop_id, lop_allergobosses_id)
+lop_allergobosses_top10_data = get_top_10(LOP_ID, LOP_ALL_ERGO_BOSSES_ID)
 # Player data for top 10 runs for LoP Any%
 lop_anyperc_players_data = get_player_data_from_top10(lop_anyperc_top10_data)
 # Player data for top 10 runs for LoP All Ergo Bosses
@@ -580,16 +580,16 @@ all_runs_dict['retrieval_date'] = []
 
 # Elden Ring All Runs
 prepare_all_runs_dict(
-    all_runs_dict, table_run_ids, er_all_runs, er_categories, elden_ring_name)
+    all_runs_dict, table_run_ids, er_all_runs, er_categories, ER_NAME)
 # SMO All Runs
 prepare_all_runs_dict(all_runs_dict, table_run_ids, smo_all_runs,
-                      smo_categories, smo_name)
+                      smo_categories, SMO_NAME)
 # Spyro All Runs
 prepare_all_runs_dict(
-    all_runs_dict, table_run_ids, spyro_all_runs, spyro_categories, spyro_name)
+    all_runs_dict, table_run_ids, spyro_all_runs, spyro_categories, SPYRO_NAME)
 # Lies of P All Runs
 prepare_all_runs_dict(
-    all_runs_dict, table_run_ids, lop_all_runs, lop_categories, lop_name)
+    all_runs_dict, table_run_ids, lop_all_runs, lop_categories, LOP_NAME)
 
 all_runs_df = pd.DataFrame(all_runs_dict, columns=['run_id', 'game_name', 'category_id', 'category_name', 'player_id1',
                            'player_name1', 'player_id2', 'player_name2', 'runtime', 'retrieval_date'])
@@ -613,31 +613,31 @@ top_ten_dict['retrieval_date'] = []
 
 # Elden Ring Any% Top Ten
 prepare_top_ten_dict(top_ten_dict, table_run_ids, table_top_ten_run_ids, er_anyperc_top10_data,
-                     er_categories, er_all_players, elden_ring_name)
+                     er_categories, er_all_players, ER_NAME)
 # Elden Ring Any% Glitchless
 prepare_top_ten_dict(top_ten_dict, table_run_ids, table_top_ten_run_ids, er_anyperc_glitchless_top10_data,
-                     er_categories, er_all_players, elden_ring_name)
+                     er_categories, er_all_players, ER_NAME)
 # Elden Ring All Remembrances Glitchless Top Ten
 prepare_top_ten_dict(top_ten_dict, table_run_ids, table_top_ten_run_ids, er_remembrances_glitchless_top10_data,
-                     er_categories, er_all_players, elden_ring_name)
+                     er_categories, er_all_players, ER_NAME)
 # SMO Any% Top Ten
 prepare_top_ten_dict(
-    top_ten_dict, table_run_ids, table_top_ten_run_ids, smo_anyperc_top10_data, smo_categories, smo_all_players, smo_name)
+    top_ten_dict, table_run_ids, table_top_ten_run_ids, smo_anyperc_top10_data, smo_categories, smo_all_players, SMO_NAME)
 # SMO 100% Top Ten
 prepare_top_ten_dict(
-    top_ten_dict, table_run_ids, table_top_ten_run_ids, smo_100perc_top10_data, smo_categories, smo_all_players, smo_name)
+    top_ten_dict, table_run_ids, table_top_ten_run_ids, smo_100perc_top10_data, smo_categories, smo_all_players, SMO_NAME)
 # Spyro Any% Top Ten
 prepare_top_ten_dict(top_ten_dict, table_run_ids, table_top_ten_run_ids, spyro_anyperc_top10_data,
-                     spyro_categories, spyro_all_players, spyro_name)
+                     spyro_categories, spyro_all_players, SPYRO_NAME)
 # Spyro 120% Top Ten
 prepare_top_ten_dict(top_ten_dict, table_run_ids, table_top_ten_run_ids, spyro_120perc_top10_data,
-                     spyro_categories, spyro_all_players, spyro_name)
+                     spyro_categories, spyro_all_players, SPYRO_NAME)
 # Lies of P Any% Top Ten
 prepare_top_ten_dict(
-    top_ten_dict, table_run_ids, table_top_ten_run_ids, lop_anyperc_top10_data, lop_categories, lop_all_players, lop_name)
+    top_ten_dict, table_run_ids, table_top_ten_run_ids, lop_anyperc_top10_data, lop_categories, lop_all_players, LOP_NAME)
 # Lies of P All Ergo Bosses Top Ten
 prepare_top_ten_dict(top_ten_dict, table_run_ids, table_top_ten_run_ids, lop_allergobosses_top10_data,
-                     lop_categories, lop_all_players, lop_name)
+                     lop_categories, lop_all_players, LOP_NAME)
 top_ten_df = pd.DataFrame(top_ten_dict, columns=['run_id', 'game_name', 'category_id', 'category_name', 'placement',
                                                  'player_id1', 'player_name1', 'player_id2', 'player_name2', 'runtime', 'verification_date', 'retrieval_date'])
 print("Completed Transformation...")

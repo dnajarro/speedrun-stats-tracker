@@ -2,3 +2,29 @@
     color: white;
     -webkit-text-stroke: 1px gray;
 }
+
+table {
+    counter-reset: rowNumber;
+    align-items: left;
+    justify-content: center;
+    table-layout: fixed;
+    width: 1000px;
+    border-collapse: collapse;
+}
+
+td, th {
+    text-align: left;
+    padding: 10px;
+    border-collapse: collapse;
+    width: 250px;
+}
+
+table tr > td:first-child {
+    counter-increment: rowNumber;
+}
+
+table tr td:first-child::before {
+    content: counter(rowNumber) ".";
+    min-width: 2em;
+    margin-right: 1em;
+}

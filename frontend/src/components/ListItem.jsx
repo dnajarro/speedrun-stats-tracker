@@ -16,16 +16,17 @@ const ListItem = ({ data, datatypes }) => {
         }
       } else if (datapoint === "player_name2") {
         if (data[datapoint]) resultList.push(data[datapoint]);
+        else resultList.push(null);
       } else if (datapoint === "verification_date") {
         var re = /([A-Za-z])+, [0-9]+ [A-Za-z]+ 20[0-9][0-9]/g;
-        resultList.push(
-          `Verified: ${(data[datapoint].match(re) || []).join("")}`
-        );
+        resultList.push(`${(data[datapoint].match(re) || []).join("")}`);
       } else {
         resultList.push(data[datapoint]);
       }
     });
-  return resultList.join(" | ");
+  return resultList.map((tableData, index) => {
+    return <td key={index}>{tableData}</td>;
+  });
 };
 
 export default ListItem;

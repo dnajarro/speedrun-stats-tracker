@@ -78,8 +78,10 @@ const DataDisplay = ({ application }) => {
       <ul>{topTensList}</ul>
       <ul>{allRunsCountList}</ul>
       <ul>{recentRunsCountList}</ul>
-      <Graph image={fastestTimeGraph}></Graph>
-      <Graph image={totalRunsGraph}></Graph>
+      <div>
+        <Graph image={fastestTimeGraph}></Graph>
+        <Graph image={totalRunsGraph}></Graph>
+      </div>
     </>
   );
 };
